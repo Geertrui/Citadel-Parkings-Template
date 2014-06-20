@@ -13,7 +13,7 @@
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
         <!--------------- CSS files ------------------->    
-        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+<!--        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />-->
         <link rel="stylesheet" href="css/my.css" />
             
         <!--------------- Javascript dependencies -------------------> 
@@ -31,7 +31,9 @@
         <!-- jQuery Library --> 
         <script src="js/jquery-1.8.2.min.js"></script>
         <!-- jQuery Mobile Library -->
-        <script src="js/jquery.mobile-1.2.0.min.js"></script>  
+<!--        <script src="js/jquery.mobile-1.2.0.min.js"></script>  -->
+                   <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.2/jquery.mobile.min.css" />
+        <script src="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.2/jquery.mobile.min.js"></script>
         <!-- Page params Library: Used to pass query params to embedded/internal pages of jQuery Mobile -->    
         <script src="js/jqm.page.params.js"></script>
         <!-- Template specific functions and handlers -->    
@@ -41,8 +43,16 @@
 
     <body>
         <!-- Home Page: Contains the Map -->
-        <div data-role="page" id="page1" class="page">
-            <header data-role="header" data-posistion="fixed" data-id="constantNav" data-fullscreen="true">
+        <div data-role="page" id="page1" data-theme="b" class="page">
+            <div data-role="popup" id="popupMenu" data-theme="a">
+        <ul data-role="listview" data-inset="true" style="min-width:210px;">
+            <li data-role="list-divider">How do you want to get there?</li>
+            <li><a  onclick="initStartingPoint('DRIVING')" ><img class="ui-li-icon" src='css/images/car-black.png' />Car</a></li>
+            <li><a  onclick="initStartingPoint('WALKING')" ><img  class="ui-li-icon"  src='css/images/walk2-black.png' />Walk</a></li>
+              <li><a  onclick="initStartingPoint('TRANSIT')"><img  class="ui-li-icon"  src='css/images/bus-black.png'  />Public transportation</a></li>
+        </ul>
+</div>
+            <header data-role="header" data-theme="b" data-id="constantNav" data-fullscreen="true">
                 <a href="#info" data-rel="dialog" data-icon="info" data-iconpos="notext" data-theme="b" title="Info">&nbsp;</a>
                 <span class="ui-title">Find Parking Lots</span>
                 <div data-role="navbar" class="navbar">
@@ -53,14 +63,14 @@
                     </ul>
                 </div><!-- /navbar -->
             </header>
-
-            <div data-role="content" id="map-container">
-                <div id="map_canvas" class="map_canvas"></div>
+ <!--data-role="content"-->
+            <div role="main" class="ui-content" id="map-container">
+                <div id="map_canvas" class="map_canvas" style=" top:0; position:absolute;"></div>
             </div>
         </div>       
 
         <!-- List Page: Contains a list with the results -->
-        <div data-role="page" id="page2" class="page">
+        <div data-role="page" data-theme="b" id="page2" class="page">
 
             <header data-role="header" data-posistion="fixed" data-id="constantNav">
                 <a href="#info" data-rel="dialog" data-icon="info" data-iconpos="notext" data-theme="b" title="Info">&nbsp;</a>
@@ -87,7 +97,7 @@
         </div><!-- /page -->
         
         <!-- Details Page: Contains the details of a selected element -->
-        <div data-role="page" id="page3" data-title="Parking Details" class="page">
+        <div data-role="page" data-theme="b" id="page3" data-title="Parking Details" class="page">
             <header data-role="header" data-posistion="fixed" data-fullscreen="true">
                 <a href="#info" data-rel="dialog" data-icon="info" data-iconpos="notext" data-theme="b" title="Info">&nbsp;</a>
                 <span class="ui-title">Parking details</span>
@@ -103,7 +113,9 @@
             
             <div class="list-container">
                 <div class="list-scroll-container">
-                    <div data-role="content" id="item">
+                    <div data-role="content">
+                            <a onclick='seeOnMap(); return false;'  class="ui-btn ui-shadow ui-corner-all ui-icon-location ui-btn-icon-notext">See on map</a>
+                        <span id="item"></span>
                         <!-- dynamically filled with data -->
                     </div><!--item-->
                 </div><!--list-scroll-container-->
@@ -111,7 +123,7 @@
         </div><!-- /page -->
             
         <!-- Info Page: Contains info of the currently used dataset -->  
-        <div data-role="page" id="info">
+        <div data-role="page" id="info" data-theme="b">
             <header data-role="header">
                 <span class="ui-title">Metadata Information</span>	
             </header>

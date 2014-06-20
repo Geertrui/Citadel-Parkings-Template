@@ -1,5 +1,8 @@
 /****************** Functions *****************************/
 
+var currentPoi;
+var markersArray;
+var stepDisplay;
 /* Initialization function.
  * It is called once when the page is load
  */
@@ -26,7 +29,6 @@ function getPoisFromDataset(resultCallback)
         meta['lang'] = data.dataset.lang;
         meta['author_id'] = data.dataset.author.id;
         meta['author_value'] = data.dataset.author.value;
-        
         $.each(data.dataset.poi, function(i, poi) {
             pois[poi.id] = poi;
         });
@@ -37,6 +39,8 @@ function getPoisFromDataset(resultCallback)
 /* Initialises a google map using map api v3 */
 function initializeMap(Lat, Lon) {
 
+    // Instantiate an info window to hold step text.
+    stepDisplay = new google.maps.InfoWindow();
     //define the center location 
     var myLatlng = new google.maps.LatLng(Lat, Lon);
     //define the map options
@@ -47,21 +51,32 @@ function initializeMap(Lat, Lon) {
     };
     //instantiate the map wih the options and put it in the div holder, "map-canvas"
     map = new google.maps.Map(document.getElementById("map_canvas"),
-        mapOptions);
+            mapOptions);
     addMarkers();
+
+    var rendererOptions = {
+        map: map
+    }
+    directionsService = new google.maps.DirectionsService();
+    directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);
 }
 
 /* Adds all the markers on the global map object */
 function addMarkers()
 {
+    markersArray = new Array();
     /* var oms will hold all the markers so as to resolve
      * the issue of overlapping ones
      */
+
+
     var oms = new OverlappingMarkerSpiderfier(map);
     var iw = new google.maps.InfoWindow();
     oms.addListener('click', function(marker) {
         iw.setContent(marker.desc);
         iw.open(map, marker);
+        currentTransit.lat = marker.position.lat();
+        currentTransit.lon = marker.position.lng();
     });
 
     /* We initialize the infobubble styling */
@@ -93,11 +108,15 @@ function addMarkers()
             map: map,
             icon: marker_image
         });
+        current_marker.citadelPoi = poi;
         oms.addMarker(current_marker);
+        markersArray[poi.id] = current_marker;
+        console.log("markersArray", markersArray);
         google.maps.event.addListener(current_marker, 'click', function() {
-            infoBubble.setContent(setInfoWindowParkingPoi(poi));
-            infoBubble.open(map, current_marker);
+            infoBubble.setContent(setInfoWindowParkingPoi(this.citadelPoi));
+            infoBubble.open(map, this);
             setTimeout("$('#parkingBubble').parent().parent().css('overflow', 'hidden')", 100);
+
         });
     });
 }
@@ -120,7 +139,9 @@ function getMarkerImage(poi, template) {
 function setInfoWindowParkingPoi(poi)
 {
     var capacity = "";
-
+    console.log("setting current POI, setInfoWindow", poi);
+    currentPoi = poi;
+    //alert(currentPoi.id  +"setInfo");
     /* Get the Parking specific attributes of the POI */
     if (getCitadel_attr(poi, "#Citadel_parkCapacity").term != null && getCitadel_attr(poi, "#Citadel_parkCapacity").term != '') {
         if (getCitadel_attr(poi, "#Citadel_parkSpaces").term != null && getCitadel_attr(poi, "#Citadel_parkSpaces").term != '') {
@@ -139,13 +160,13 @@ function setInfoWindowParkingPoi(poi)
     }
 
     var contentTemplate =
-        "<div id='parkingBubble'><a href='#page3' onclick='overrideDetailClick(\"" + poi.id + "\"); return false;'>" +
-        "<div class='title'>" +
-        poi.title +
-        "</div>" +
-        "<div class='address'>" + poi.location.address.value +
-        "</div>\n" + capacity +
-        "</a></div><div id='bubbleClose'><a href='' onclick='return overrideBubbleCloseClick();'><img src='images/close.png' width='25' height='25' alt='close' /></a></div>";
+            "<div id='parkingBubble'><a href='#page3' onclick='overrideDetailClick(\"" + poi.id + "\"); return false;'>" +
+            "<div class='title'>" +
+            poi.title +
+            "</div>" +
+            "<div class='address'>" + poi.location.address.value +
+            "</div>" + capacity +
+            "</a><a data-rel='popup' onclick='showTransitOptions()'  data-transition='slideup' class='ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-navigation ui-btn-icon-left ui-btn-a transitPopup'>Take me there</a></div><div id='bubbleClose'><a href='' onclick='return overrideBubbleCloseClick();'><img src='images/close.png' width='25' height='25' alt='close' /></a></div>";
 
     return contentTemplate;
 }
@@ -168,9 +189,9 @@ function setDetailPageParkingPoi(poi)
     var otherAttributes = getCitadel_attrs(poi, "");
 
     var contentTemplate =
-        "<h1>" + poi.title + "</h1>" +
-        "<div class='event-data'>" +
-        "<ul>";
+            "<h1>" + poi.title + "</h1>" +
+            "<div class='event-data'>" +
+            "<ul>";
 
     /* Display the Parking specific attributes of the POI if they exist */
     if (telephone)
@@ -198,7 +219,7 @@ function setDetailPageParkingPoi(poi)
     }
 
     contentTemplate += "</ul>" +
-        "</div>";
+            "</div>";
 
     return contentTemplate;
 }
@@ -215,9 +236,9 @@ function setListPageParkingPois()
         var capacity = "";
         if (getCitadel_attr(poi, "#Citadel_parkCapacity").term != '') {
             capacity = "<p>" +
-                getCitadel_attr(poi, "#Citadel_parkCapacity").text +
-                " slots" +
-                "</p>";
+                    getCitadel_attr(poi, "#Citadel_parkCapacity").text +
+                    " slots" +
+                    "</p>";
         }
 
         var spaces = "";
@@ -231,8 +252,7 @@ function setListPageParkingPois()
                 "<li>" +
                 "<a href='' onclick='overrideDetailClick(\"" + poi.id + "\"); return false;'>" +
                 "<img src='" + getMarkerImage(poi, 'list') + "' alt='Parking' />" +
-                "<h3>" + poi.title + "</h3>" +
-                "<h4>" + poi.description + "</h4>" +
+                "<div>" + poi.title + "</div>" +
                 capacity + spaces +
                 "</a>" +
                 "</li>";
@@ -247,13 +267,13 @@ function setListPageParkingPois()
 function setInfoPage()
 {
     var contentTemplate =
-        "<li>Dataset ID: <b>" + meta.id + "</b></li>" +
-        "<li>Created at: <b><time>" + meta.created + "</time></b></li>" + 
-        "<li>Updated at: <b><time>" + meta.updated + "</time></b></li>" + 
-        "<li>Language: <b>" + meta.lang + "</b></li>" + 
-        "<li>Author ID: <b>" + meta.author_id + "</b></li>" + 
-        "<li>Author Value: <b>" + meta.author_value + "</b></li>" + 
-        "<li>Created by: <b><a href='http://www.atc.gr' target='_blank'>atc.gr</a></b></li>";
+            "<li>Dataset ID: <b>" + meta.id + "</b></li>" +
+            "<li>Created at: <b><time>" + meta.created + "</time></b></li>" +
+            "<li>Updated at: <b><time>" + meta.updated + "</time></b></li>" +
+            "<li>Language: <b>" + meta.lang + "</b></li>" +
+            "<li>Author ID: <b>" + meta.author_id + "</b></li>" +
+            "<li>Author Value: <b>" + meta.author_value + "</b></li>" +
+            "<li>Created by: <b><a href='http://www.atc.gr' target='_blank'>atc.gr</a></b></li>";
 
     return contentTemplate;
 }
@@ -283,18 +303,24 @@ function getCitadel_attr(poi, tplIdentifer) {
         "type": "",
         "text": ""
     };
-    $.each(poi.attribute, function(i, attr) {
-        if (attr.tplIdentifier === tplIdentifer)
-        {
-            attribute = {
-                "term": attr.term,
-                "type": attr.type,
-                "text": attr.text
-            };
-            return false;
-        }
-    });
-    return attribute;
+    if (poi)
+    {
+        $.each(poi.attribute, function(i, attr) {
+            if (attr.tplIdentifier === tplIdentifer)
+            {
+                attribute = {
+                    "term": attr.term,
+                    "type": attr.type,
+                    "text": attr.text
+                };
+                return false;
+            }
+        });
+        return attribute;
+    }
+    else {
+        return "";
+    }
 }
 
 /*  Returns an array of all the attributes with 
@@ -320,10 +346,12 @@ function getCitadel_attrs(poi, tplIdentifer) {
 function overrideDetailClick(id) {
     //Get poi by id
     var poi = pois[id];
+    currentPoi = poi;
+    console.log("pois[" + id + "]", poi);
     //Pass data to details constructor
     $('#item').html(setDetailPageParkingPoi(poi));
 
-    $.mobile.changePage("#page3", { transition: "none", reverse: false, changeHash: false});
+    $.mobile.changePage("#page3", {transition: "none", reverse: false, changeHash: false});
     window.location.href = "#page3?id=" + id;
 
     return true;
@@ -377,7 +405,7 @@ $(document).ready(function() {
     /* Click handler for the 'near me' button */
     $('.pois-nearme').click(function() {
         lastLoaded = 'nearme';
-        $.mobile.changePage("#page1", { transition: "none"});
+        $.mobile.changePage("#page1", {transition: "none"});
         $('.navbar > ul > li > a').removeClass('ui-btn-active');
         $('.pois-nearme').addClass('ui-btn-active');
 
@@ -406,6 +434,9 @@ $(document).ready(function() {
             initializeMap(mapLat, mapLon);
             google.maps.event.trigger(map, 'resize');
         }
+
+        /* Event Tracking in Analytics */
+        //trackEvent('nearme');
     });
 
     /* Click handler for the 'show all' button */
@@ -430,14 +461,17 @@ $(document).ready(function() {
             }
         }
 
-        $.mobile.changePage("#page1", { transition: "none"});
+        $.mobile.changePage("#page1", {transition: "none"});
         $('.navbar > ul > li > a').removeClass('ui-btn-active');
         $('.pois-showall').addClass('ui-btn-active');
+
+        /* Event Tracking in Analytics */
     });
 
     /* Click handler for the 'list' button */
     $('.pois-list').click(function() {
-        $.mobile.changePage("#page2", { transition: "none"});
+        $.mobile.changePage("#page2", {transition: "none"});
+        /* Event Tracking in Analytics */
     });
 
     /* Checks for the active page and performs the 
@@ -473,3 +507,143 @@ window.addEventListener("load", function() {
         window.scrollTo(0, 1);
     }, 0);
 });
+/*
+ * Event Tracking in Google Analytics 
+ *  Category is the same for all events 
+ *  City-Name is the same for all the events
+ */
+//function trackEvent(action) {     
+//    _gaq.push(['_trackEvent', 'Parking', action, 'City-Name']);
+//}
+
+
+function Transit(lat, lon, type) {
+    this.lat = lat;
+    this.lon = lon;
+    this.type = type;
+}
+
+var currentTransit = new Transit("", "", "");
+var directionsService;
+var markerArray = [];
+var directionsDisplay;
+function initStartingPoint(transitType)
+{
+    $.mobile.loading("show", {
+        text: 'Loading your route',
+        textVisible: true
+    });
+    $("#popupMenu").popup("close");
+    infoBubble.close();
+    var startPoint;
+
+
+    /* Check if we can get geolocation from the browser */
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            $.mobile.loading("show", {
+                text: 'Loading your route',
+                textVisible: true
+            });
+
+            /* Load near me marker only once */
+            isNearMeMarkerLoaded = true;
+            var currentmarkerpos = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
+            var currentmarker = new google.maps.Marker({
+                position: currentmarkerpos,
+                map: map,
+                animation: google.maps.Animation.DROP
+            });
+            startPoint = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            // Route the directions and pass the response to a
+            // function to create markers for each step.
+            calcRoute(startPoint, transitType);
+        }, function(error) {
+
+            startPoint = new google.maps.LatLng(mapLat, mapLon);
+            calcRoute(startPoint, transitType);
+        });
+    }
+
+    else
+    {
+        startPoint = new google.maps.LatLng(mapLat, mapLon);
+        calcRoute(startPoint, transitType);
+    }
+}
+
+function calcRoute(startPoint, transitType) {
+    console.log("start", startPoint);
+
+    endPoint = new google.maps.LatLng(currentTransit.lat, currentTransit.lon);
+    console.log("end", endPoint);
+    var request = {
+        origin: startPoint,
+        destination: endPoint,
+        travelMode: google.maps.TravelMode[transitType]
+    };
+    directionsService.route(request, function(response, status) {
+
+        if (status == google.maps.DirectionsStatus.OK) {
+            //    var warnings = document.getElementById('warnings_panel');
+            //warnings.innerHTML = '<b>' + response.routes[0].warnings + '</b>';
+            //   console.log("Routes", response.routes);
+            directionsDisplay.setDirections(response);
+            showSteps(response);
+            $.mobile.loading("hide");
+        }
+        else {
+            alert("Could not create route: " + status);
+        }
+    });
+
+    // First, remove any existing markers from the map.
+    for (var i = 0; i < markerArray.length; i++) {
+        markerArray[i].setMap(null);
+    }
+    // Now, clear the array itself.
+    markerArray = [];
+}
+
+function showSteps(directionResult) {
+    // For each step, place a marker, and add the text to the marker's
+    // info window. Also attach the marker to an array so we
+    // can keep track of it and remove it when calculating new
+    // routes.
+    var myRoute = directionResult.routes[0].legs[0];
+
+    for (var i = 0; i < myRoute.steps.length; i++) {
+        var marker = new google.maps.Marker({
+            position: myRoute.steps[i].start_location,
+            map: map,
+            animation: google.maps.Animation.DROP
+        });
+        attachInstructionText(marker, myRoute.steps[i].instructions);
+        markerArray[i] = marker;
+    }
+}
+
+function attachInstructionText(marker, text) {
+    google.maps.event.addListener(marker, 'click', function() {
+        // Open an info window when the marker is clicked on,
+        // containing the text of the step.
+        stepDisplay.setContent(text);
+        stepDisplay.open(map, marker);
+        //   fixMapHeight();
+    });
+}
+
+/*see the selected sensor on the map*/
+function seeOnMap()
+{
+    $.mobile.changePage("#page1", {transition: "none"});
+    map.setZoom(16);
+    infoBubble.setContent(setInfoWindowParkingPoi(currentPoi));
+    infoBubble.open(map, markersArray[currentPoi.id]);
+}
+
+function showTransitOptions()
+{
+    $("#popupMenu").popup("open");
+}

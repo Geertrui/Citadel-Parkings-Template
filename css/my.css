@@ -17,19 +17,19 @@ ul, ol {
 table {
 	border-collapse: collapse;
 	border-spacing: 0;
-}
+}/*
 header.ui-header, footer.ui-footer {
     position: absolute;
     width:100%;
     z-index: 999;
-}
+}*/
 /*.ui-popup-container .ui-popup .ui-header, .ui-footer {
     position: relative;
     width: auto;
-}*/
+}
 .ui-header {
     top:0;
-}
+}*/
 .ui-footer {
     bottom:0;
 }
@@ -48,8 +48,9 @@ header.ui-header, footer.ui-footer {
 #map-container {
     width:100%;
     height:100%;
-    padding: 78px 0 0 0;
+    padding: 0;
     overflow: hidden;
+    position: relative;
 }
 .map_canvas {  
     width:100%;
@@ -116,11 +117,12 @@ header.ui-header, footer.ui-footer {
 #list form {
     background: #00467a;
 }
+/*
 #list ul li {
     padding-top:.5%;
     padding-bottom:.5%;
     border-bottom: 1px solid #6aa7d2;
-}
+}*/
 #list ul li.ui-btn-up-b {
     background: #00467a;
     background-image: none !important;
@@ -464,3 +466,10 @@ header.ui-header, footer.ui-footer {
         display:none;
     }
 }
+
+.ui-li-has-thumb img {left:20px !important;top:20px !important;}
+/* jquery mobile 1.4.2 fix*/
+.ui-icon-loading {
+    background: url("http://code.jquery.com/mobile/1.2.0/images/ajax-loader.gif") repeat scroll 0 0 / 2.875em 2.875em rgba(0, 0, 0, 0) !important;
+}
+.gm-style-iw {color: #555; text-shadow: none;}
