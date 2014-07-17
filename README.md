@@ -1,4 +1,4 @@
-Citadel-Parkings-Template
+﻿Citadel-Parkings-Template
 =========================
 
 CITADEL on the move - Mobile application template for Parking Garages - www.citadelonthemove.eu
@@ -14,3 +14,5 @@ Deployment
 
 For more details on how to install the template and the underlying technology please refer to the 
 [guide documents](doc/Installation Guide-Parking.docx) inside the 'doc' folder. 
+
+5. 
